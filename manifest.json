@@ -1,0 +1,28 @@
+{
+    "name": "YouTube Feed No Content",
+    "description": "This extension censors the videos from the YouTube home page, so avoiding distraction",
+    "version": "0.1",
+    "manifest_version": 3,
+    "permissions": ["activeTab", "storage"],
+    "host_permissions": [
+        "https://www.youtube.com/*"
+    ],
+    "content_scripts": [
+        {
+            "js": [
+                "script.js"
+            ],
+            "matches": [ "https://www.youtube.com/*" ],
+            "run_at": "document_end"
+        }
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": [ "icons/*" ],
+        "matches": [ "https://www.youtube.com/*" ]
+      }
+    ],
+  "action": {
+    "default_title": "YouTube Content Censor"
+  }
+}

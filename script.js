@@ -1,61 +1,44 @@
-console.log("YouTube Feed Censor Extension Loaded");
+console.log("YouTube Feed Focus Extension Loaded");
 
-function isHomePage() {
-    return location.pathname === "/";
-}
+const styleId = "yt-focus-mode-style";
 
-function isWatchPage() {
-    return location.pathname.startsWith("/watch");
-}
-
-function injectStyles() {
-    if (document.getElementById("yt-censor-style")) return;
-
-    const style = document.createElement("style");
-    style.id = "yt-censor-style";
-
-    style.innerHTML = `
-        /* Botão "ver mais vídeos" no fullscreen */
-        .ytp-fullscreen-grid-expand-button {
-            display: none !important;
+function applyFocusMode(enabled) {
+    let style = document.getElementById(styleId);
+    if (enabled) {
+        if (!style) {
+            style = document.createElement("style");
+            style.id = styleId;
+            style.innerHTML = `
+                /* Grid de vídeos da home do YouTube */
+                ytd-rich-grid-renderer {
+                    display: none !important;
+                }
+                /* Sidebar de vídeos (sugeridos) na página de reprodução */
+                #secondary {
+                    display: none !important;
+                }
+                /* Botão "ver mais vídeos" no fullscreen */
+                .ytp-fullscreen-grid-expand-button {
+                    display: none !important;
+                }
+            `;
+            (document.head || document.documentElement).appendChild(style);
         }
-    `;
-
-    document.head.appendChild(style);
-}
-
-function removeElements() {
-    if (isHomePage()) {
-        // Grid de vídeos da home
-        document.querySelector('ytd-rich-grid-renderer')?.remove();
-    }
-
-    if (isWatchPage()) {
-        // Sidebar de vídeos
-        document.querySelector('#secondary')?.remove();
+    } else {
+        if (style) {
+            style.remove();
+        }
     }
 }
 
-// inicial
-injectStyles();
-removeElements();
-
-// navegação interna do YouTube
-window.addEventListener('yt-navigate-finish', () => {
-    removeElements();
+// Inicializa a partir do storage (padrão: ativado)
+chrome.storage.local.get({ enabled: true }, (result) => {
+    applyFocusMode(result.enabled);
 });
 
-// fallback
-let lastUrl = location.href;
-
-const observer = new MutationObserver(() => {
-    if (location.href !== lastUrl) {
-        lastUrl = location.href;
-        removeElements();
+// Escuta mudanças de estado em tempo real vindas do popup
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.enabled !== undefined) {
+        applyFocusMode(changes.enabled.newValue);
     }
-});
-
-observer.observe(document.body, {
-    childList: true,
-    subtree: true
 });
